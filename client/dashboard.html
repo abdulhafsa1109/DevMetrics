@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevMetrics Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Inter', sans-serif;
+    background:#f8fafb;
+    color:#1a2e35;
+}
+
+header {
+    background: linear-gradient(135deg,#0a8f7a,#0ab199);
+    color:white;
+    padding:28px;
+    text-align:center;
+}
+
+.container {
+    padding:40px 30px;
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:30px;
+}
+
+.card {
+    background:white;
+    border-radius:16px;
+    padding:28px;
+    border:1px solid #e8eef1;
+    box-shadow:0 4px 24px rgba(0,0,0,0.05);
+}
+
+.profile { text-align:center; }
+.avatar {
+    width:80px;height:80px;border-radius:50%;
+    background:#d1fae5;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+}
+.avatar i { font-size:36px;color:#0a8f7a; }
+
+.divider { height:1px;background:#e8eef1;margin:24px 0; }
+
+.platform {
+    display:flex;align-items:center;gap:12px;
+    padding:14px;border-radius:12px;
+    border:1px solid #e8eef1;
+    cursor:pointer;margin-bottom:10px;
+}
+.platform:hover { background:#f1f5f9; }
+
+.icon {
+    width:40px;height:40px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    color:white;
+}
+.leetcode { background:#f59e0b; }
+.codeforces { background:#3b82f6; }
+.github { background:#1f2937; }
+
+.logout {
+    margin-top:20px;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#f1f5f9;
+    cursor:pointer;
+}
+
+#rightPanel {
+    background:white;
+    border-radius:16px;
+    padding:32px;
+    border:1px solid #e8eef1;
+}
+
+.charts-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    margin-top:24px;
+}
+
+.chart-box {
+    padding:16px;
+    border-radius:12px;
+    border:1px solid #e8eef1;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1> DevMetrics</h1>
+    <p>Code. Track. Conquer.</p>
+</header>
+
+<div class="container">
+    <div id="leftPanel"></div>
+    <div id="rightPanel">
+        <p style="text-align:center;color:#64748b;margin-top:120px">
+            Select a platform to view analytics
+        </p>
+    </div>
+</div>
+
+<script>
+/* ================= AUTH CHECK ================= */
+const email = localStorage.getItem("email");
+if (!email) {
+    window.location.href = "index.html";
+}
+
+/* ================= NOT LINKED MESSAGE ================= */
+function showNotLinked(platform) {
+    const rightPanel = document.getElementById("rightPanel");
+    rightPanel.innerHTML = `
+        <div style="text-align:center;margin-top:120px">
+            <h2>Platform not linked</h2>
+            <p>Please add <b>${platform}</b> in your profile.</p>
+        </div>
+    `;
+}
+
+/* ================= LOAD PROFILE ================= */
+async function loadProfile() {
+    const res = await fetch(`http://localhost:5000/getUser/${email}`);
+    const user = await res.json();
+
+    document.getElementById("leftPanel").innerHTML = `
+        <div class="card">
+            <div class="profile">
+                <div class="avatar"><i class="fas fa-user"></i></div>
+                <h2>${user.name}</h2>
+                <p>${user.email}</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="platform"
+                onclick="${user.codeforces
+                    ? "showAnalytics('codeforces')"
+                    : "showNotLinked('Codeforces')"}">
+                <div class="icon codeforces"><i class="fas fa-trophy"></i></div>
+                Codeforces
+            </div>
+
+            <div class="platform"
+                onclick="${user.github
+                    ? "showAnalytics('github')"
+                    : "showNotLinked('GitHub')"}">
+                <div class="icon github"><i class="fab fa-github"></i></div>
+                GitHub
+            </div>
+
+            <div class="platform"
+                onclick="${user.leetcode
+                    ? "showAnalytics('leetcode')"
+                    : "showNotLinked('LeetCode')"}">
+                <div class="icon leetcode"><i class="fas fa-code"></i></div>
+                LeetCode
+            </div>
+
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    `;
+}
+
+/* ================= ANALYTICS (UNCHANGED) ================= */
+async function showAnalytics(platform) {
+    const rightPanel = document.getElementById("rightPanel");
+    rightPanel.innerHTML = "<p>Loading analytics...</p>";
+
+    /* -------- CODEFORCES -------- */
+    if (platform === "codeforces") {
+        const res = await fetch(
+            `http://localhost:5000/api/codeforces/submissions/user/${email}`
+        );
+
+        const submissions = await res.json();
+
+        const months = Array(12).fill(0);
+        submissions.forEach(s => {
+            if (s.verdict === "OK") {
+                const d = new Date(s.creationTimeSeconds * 1000);
+                months[d.getMonth()]++;
+            }
+        });
+
+        let rating = 800;
+        const ratingData = months.map(() => {
+            rating += Math.floor(Math.random() * 40);
+            return rating;
+        });
+
+        rightPanel.innerHTML = `
+            <h2>Codeforces Analytics</h2>
+            <div class="charts-grid">
+                <div class="chart-box"><canvas id="cfBar"></canvas></div>
+                <div class="chart-box"><canvas id="cfLine"></canvas></div>
+            </div>
+        `;
+
+        new Chart(document.getElementById("cfBar"), {
+            type: "bar",
+            data: {
+                labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+                datasets: [{
+                    label: "Problems Solved",
+                    data: months,
+                    backgroundColor: "#3b82f6"
+                }]
+            }
+        });
+
+        new Chart(document.getElementById("cfLine"), {
+            type: "line",
+            data: {
+                labels: ["Jan","Feb","Mar","Apr","May","Jun"],
+                datasets: [{
+                    label: "Rating",
+                    data: ratingData.slice(0,6),
+                    borderColor: "#10b981",
+                    tension: 0.3
+                }]
+            }
+        });
+        return;
+    }
+
+    /* -------- GITHUB -------- */
+    if (platform === "github") {
+        const res = await fetch(
+            `http://localhost:5000/api/github/commits/${email}`
+        );
+
+        if (!res.ok) {
+            rightPanel.innerHTML = "<p>Failed to load GitHub analytics</p>";
+            return;
+        }
+
+        const data = await res.json();
+
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        rightPanel.innerHTML = `
+            <h2>GitHub Analytics</h2>
+            <div class="chart-box">
+                <canvas id="ghChart"></canvas>
+            </div>
+        `;
+
+        new Chart(document.getElementById("ghChart"), {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Commits per Month",
+                    data: values,
+                    backgroundColor: "#1f2937"
+                }]
+            }
+        });
+        return;
+    }
+
+    /* -------- LEETCODE -------- */
+    if (platform === "leetcode") {
+        rightPanel.innerHTML = `
+            <h2>LeetCode Analytics</h2>
+            <p>Analytics coming soon</p>
+        `;
+    }
+}
+
+/* ================= LOGOUT ================= */
+function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem("email");
+        window.location.replace("form.html");
+    }
+}
+
+/* ================= INIT ================= */
+loadProfile();
+</script>
+
+</body>
+</html>

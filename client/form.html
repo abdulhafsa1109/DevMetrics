@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coding Dashboard | Auth</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background: #f4f6f8;
+}
+
+.container {
+    width: 900px;
+    max-width: 100%;
+    height: 550px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+/* LEFT */
+.forms {
+    width: 50%;
+    padding: 50px;
+    position: relative;
+}
+
+/* RIGHT */
+.side {
+    width: 50%;
+    background: linear-gradient(135deg, #0a8f7a, #0ab199);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* FORMS */
+form {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+form.active {
+    opacity: 1;
+    position: relative;
+    pointer-events: auto;
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #0a544a;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #0a8f7a;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #087062;
+}
+
+.side button {
+    background: transparent;
+    border: 2px solid white;
+    width: auto;
+    padding: 10px 25px;
+    margin-top: 20px;
+}
+
+/* MESSAGE */
+#message {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.success { color: green; }
+.error { color: red; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="forms">
+
+        <!-- SIGN IN -->
+        <form id="signInForm" class="active">
+            <h1>Sign In</h1>
+            <input type="email" id="loginEmail" placeholder="Email" />
+            <button type="submit">SIGN IN</button>
+        </form>
+
+        <!-- SIGN UP -->
+        <form id="signUpForm">
+            <h1>Create Account</h1>
+            <input id="userName" placeholder="Name" />
+            <input id="userEmail" type="email" placeholder="Email" />
+            <input id="leetcode" placeholder="LeetCode URL" />
+            <input id="codeforces" placeholder="Codeforces URL" />
+            <input id="atcoder" placeholder="AtCoder URL" />
+            <input id="github" placeholder="GitHub URL" />
+            <button type="submit">SIGN UP</button>
+        </form>
+
+        <p id="message"></p>
+    </div>
+
+    <div class="side">
+        <h1 id="sideTitle">Hello, Friend!</h1>
+        <p id="sideText">Create your account</p>
+        <button id="toggleBtn">SIGN UP</button>
+    </div>
+
+</div>
+
+<!-- ... your existing HTML ... -->
+<script>
+const signInForm = document.getElementById("signInForm");
+const signUpForm = document.getElementById("signUpForm");
+const toggleBtn = document.getElementById("toggleBtn");
+const sideTitle = document.getElementById("sideTitle");
+const sideText = document.getElementById("sideText");
+const message = document.getElementById("message");
+
+// INPUTS
+const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
+const leetcode = document.getElementById("leetcode");
+const codeforces = document.getElementById("codeforces");
+const atcoder = document.getElementById("atcoder");
+const github = document.getElementById("github");
+const loginEmail = document.getElementById("loginEmail");
+
+// ================= TOGGLE =================
+toggleBtn.addEventListener("click", () => {
+    if (signInForm.classList.contains("active")) {
+        signInForm.classList.remove("active");
+        signUpForm.classList.add("active");
+        sideTitle.textContent = "Welcome Back!";
+        sideText.textContent = "Sign in to continue";
+        toggleBtn.textContent = "SIGN IN";
+    } else {
+        signUpForm.classList.remove("active");
+        signInForm.classList.add("active");
+        sideTitle.textContent = "Hello, Friend!";
+        sideText.textContent = "Create your account";
+        toggleBtn.textContent = "SIGN UP";
+    }
+    message.textContent = "";
+});
+
+// ================= SIGN UP =================
+signUpForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    message.textContent = "";
+    message.className = "";
+
+    const data = {
+        name: userName.value.trim(),
+        email: userEmail.value.trim().toLowerCase(),
+        leetcode: leetcode.value.trim(),
+        codeforces: codeforces.value.trim(),
+        atcoder: atcoder.value.trim(),
+        github: github.value.trim()
+    };
+
+    if (!data.name || !data.email) {
+        message.textContent = "Name and Email are required";
+        message.classList.add("error");
+        return;
+    }
+
+    try {
+        const res = await fetch("http://localhost:5000/saveLinks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            message.textContent = result.error || "Signup failed";
+            message.classList.add("error");
+            return;
+        }
+
+        message.textContent = "Account created successfully!";
+        message.classList.add("success");
+        signUpForm.reset();
+        toggleBtn.click();
+
+    } catch {
+        message.textContent = "Server not reachable";
+        message.classList.add("error");
+    }
+});
+
+// ================= SIGN IN =================
+signInForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    message.textContent = "";
+    message.className = "";
+
+    const email = loginEmail.value.trim().toLowerCase();
+    if (!email) {
+        message.textContent = "Please enter email";
+        message.classList.add("error");
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:5000/getUser/${email}`);
+        if (!res.ok) {
+            message.textContent = "User not found. Please sign up.";
+            message.classList.add("error");
+            return;
+        }
+
+        const user = await res.json();
+
+        // STORE LOGIN STATE
+        localStorage.setItem("email", user.email);
+
+        // REDIRECT
+        window.location.href = "dashboard.html";
+
+    } catch {
+        message.textContent = "Server not reachable";
+        message.classList.add("error");
+    }
+});
+</script>
