@@ -35,4 +35,3 @@ Planned improvements include password-based authentication, LeetCode integration
 
 ---
 
-> Built by Abdul · Made for developers who like seeing their progress in one place
