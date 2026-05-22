@@ -3,299 +3,1067 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DevMetrics Dashboard</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>devMetrics — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #070b0e;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --surface3: #1c2128;
+  --border: #21262d;
+  --border2: #30363d;
+  --accent: #00ff88;
+  --accent2: #00c8ff;
+  --accent3: #ff6b6b;
+  --cf-color: #4d9eff;
+  --gh-color: #f0f6fc;
+  --lc-color: #ffb347;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --text-dim: #484f58;
+  --glow-green: 0 0 20px rgba(0,255,136,0.25);
+  --glow-blue: 0 0 20px rgba(0,200,255,0.25);
+  --radius: 10px;
+  --sidebar-w: 280px;
+  --header-h: 56px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
-    font-family: 'Inter', sans-serif;
-    background:#f8fafb;
-    color:#1a2e35;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-header {
-    background: linear-gradient(135deg,#0a8f7a,#0ab199);
-    color:white;
-    padding:28px;
-    text-align:center;
+/* ===================== TOPBAR ===================== */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: rgba(7,11,14,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  z-index: 100;
 }
 
-.container {
-    padding:40px 30px;
-    display:grid;
-    grid-template-columns:420px 1fr;
-    gap:30px;
+.topbar-logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+.topbar-logo span { color: var(--accent); }
+
+.topbar-sep { flex: 1; }
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.card {
-    background:white;
-    border-radius:16px;
-    padding:28px;
-    border:1px solid #e8eef1;
-    box-shadow:0 4px 24px rgba(0,0,0,0.05);
+.topbar-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: var(--accent);
 }
 
-.profile { text-align:center; }
-.avatar {
-    width:80px;height:80px;border-radius:50%;
-    background:#d1fae5;
-    display:flex;align-items:center;justify-content:center;
-    margin:0 auto 16px;
+.topbar-user strong { color: var(--text); font-weight: 500; }
+
+.btn-logout {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.avatar i { font-size:36px;color:#0a8f7a; }
+.btn-logout:hover { border-color: var(--accent3); color: var(--accent3); }
 
-.divider { height:1px;background:#e8eef1;margin:24px 0; }
-
-.platform {
-    display:flex;align-items:center;gap:12px;
-    padding:14px;border-radius:12px;
-    border:1px solid #e8eef1;
-    cursor:pointer;margin-bottom:10px;
-}
-.platform:hover { background:#f1f5f9; }
-
-.icon {
-    width:40px;height:40px;border-radius:10px;
-    display:flex;align-items:center;justify-content:center;
-    color:white;
-}
-.leetcode { background:#f59e0b; }
-.codeforces { background:#3b82f6; }
-.github { background:#1f2937; }
-
-.logout {
-    margin-top:20px;
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:10px;
-    background:#f1f5f9;
-    cursor:pointer;
+/* ===================== LAYOUT ===================== */
+.layout {
+  display: flex;
+  margin-top: var(--header-h);
+  min-height: calc(100vh - var(--header-h));
 }
 
-#rightPanel {
-    background:white;
-    border-radius:16px;
-    padding:32px;
-    border:1px solid #e8eef1;
+/* ===================== SIDEBAR ===================== */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
 }
 
+.sidebar-section {
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 8px 12px 4px;
+  margin-bottom: 4px;
+}
+
+.platform-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  width: 100%;
+  text-align: left;
+  transition: all 0.18s;
+  position: relative;
+  margin-bottom: 2px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.platform-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.platform-btn.active {
+  background: var(--surface2);
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.platform-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+
+.platform-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.platform-icon.cf { background: rgba(77,158,255,0.15); color: var(--cf-color); }
+.platform-icon.gh { background: rgba(240,246,252,0.1); color: var(--gh-color); }
+.platform-icon.lc { background: rgba(255,179,71,0.12); color: var(--lc-color); }
+
+.platform-info { flex: 1; min-width: 0; }
+.platform-name { font-size: 13px; font-weight: 500; line-height: 1.2; }
+.platform-handle { font-size: 11px; color: var(--text-dim); font-family: 'Space Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.not-linked-badge {
+  font-size: 9px;
+  font-family: 'Space Mono', monospace;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255,71,87,0.1);
+  color: var(--accent3);
+  border: 1px solid rgba(255,71,87,0.2);
+}
+
+/* Profile card in sidebar */
+.profile-card {
+  margin: 0 12px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.profile-avatar-big {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00ff88 0%, #00c8ff 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  color: #000;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profile-name { font-size: 14px; font-weight: 600; }
+.profile-email { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.profile-divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+/* ===================== MAIN CONTENT ===================== */
+.main {
+  flex: 1;
+  padding: 28px;
+  min-width: 0;
+  background: var(--bg);
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-state h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.empty-state p { font-size: 13px; color: var(--text-dim); }
+
+/* Section header */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.section-icon.cf { background: rgba(77,158,255,0.15); color: var(--cf-color); }
+.section-icon.gh { background: rgba(240,246,252,0.1); color: var(--gh-color); }
+.section-icon.lc { background: rgba(255,179,71,0.12); color: var(--lc-color); }
+
+.section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.stat-card.green::before { background: linear-gradient(90deg, var(--accent), transparent); }
+.stat-card.blue::before { background: linear-gradient(90deg, var(--cf-color), transparent); }
+.stat-card.orange::before { background: linear-gradient(90deg, var(--lc-color), transparent); }
+.stat-card.purple::before { background: linear-gradient(90deg, #c084fc, transparent); }
+
+.stat-card:hover { border-color: var(--border2); }
+
+.stat-card-label {
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.stat-card-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-card-value.green { color: var(--accent); }
+.stat-card-value.blue { color: var(--cf-color); }
+.stat-card-value.orange { color: var(--lc-color); }
+
+.stat-card-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* Charts grid */
 .charts-grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-    margin-top:24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.chart-box {
-    padding:16px;
-    border-radius:12px;
-    border:1px solid #e8eef1;
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+}
+
+.chart-card-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-card-title .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-green { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.dot-blue { background: var(--cf-color); box-shadow: 0 0 6px var(--cf-color); }
+.dot-orange { background: var(--lc-color); box-shadow: 0 0 6px var(--lc-color); }
+.dot-purple { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
+
+.chart-canvas-wrap {
+  position: relative;
+  height: 200px;
+}
+
+/* Full-width chart */
+.chart-card.full { grid-column: 1 / -1; }
+.chart-card.full .chart-canvas-wrap { height: 220px; }
+
+/* Loading */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.loading-text::after {
+  content: '...';
+  animation: dots 1.5s steps(3) infinite;
+}
+
+@keyframes dots {
+  0%   { content: '.'; }
+  33%  { content: '..'; }
+  66%  { content: '...'; }
+}
+
+/* Not linked state */
+.not-linked-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.not-linked-state .icon-wrap {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,71,87,0.08);
+  border: 1px solid rgba(255,71,87,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 24px;
+  color: var(--accent3);
+}
+
+.not-linked-state h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.not-linked-state p { font-size: 13px; color: var(--text-muted); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* Animate in */
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeSlide 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-in-d1 { animation-delay: 0.05s; }
+.fade-in-d2 { animation-delay: 0.1s; }
+.fade-in-d3 { animation-delay: 0.15s; }
+.fade-in-d4 { animation-delay: 0.2s; }
+
+/* Grid background on bg */
+.main {
+  background-image: radial-gradient(circle at 70% 20%, rgba(0,255,136,0.02) 0%, transparent 50%);
 }
 </style>
 </head>
 
 <body>
 
-<header>
-    <h1> DevMetrics</h1>
-    <p>Code. Track. Conquer.</p>
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="#" class="topbar-logo">dev<span>Metrics</span></a>
+  <div class="topbar-sep"></div>
+  <div class="topbar-user">
+    <div class="topbar-avatar"><i class="fas fa-user"></i></div>
+    <span><strong id="topbarName">Loading…</strong></span>
+  </div>
+  <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </header>
 
-<div class="container">
-    <div id="leftPanel"></div>
-    <div id="rightPanel">
-        <p style="text-align:center;color:#64748b;margin-top:120px">
-            Select a platform to view analytics
-        </p>
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Profile -->
+    <div class="profile-card" id="profileCard">
+      <div class="profile-header">
+        <div class="profile-avatar-big" id="profileInitials">?</div>
+        <div>
+          <div class="profile-name" id="profileName">Loading…</div>
+          <div class="profile-email" id="profileEmail">—</div>
+        </div>
+      </div>
+      <div class="profile-divider"></div>
+      <div style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;">
+        Platforms linked: <span id="linkedCount" style="color:var(--accent)">—</span>
+      </div>
     </div>
+
+    <!-- Platforms -->
+    <div class="sidebar-label">Platforms</div>
+
+    <div class="sidebar-section">
+      <button class="platform-btn" id="btn-codeforces" onclick="selectPlatform('codeforces')">
+        <div class="platform-icon cf"><i class="fas fa-trophy"></i></div>
+        <div class="platform-info">
+          <div class="platform-name">Codeforces</div>
+          <div class="platform-handle" id="cf-handle">not linked</div>
+        </div>
+        <span class="not-linked-badge" id="cf-badge" style="display:none">—</span>
+      </button>
+
+      <button class="platform-btn" id="btn-github" onclick="selectPlatform('github')">
+        <div class="platform-icon gh"><i class="fab fa-github"></i></div>
+        <div class="platform-info">
+          <div class="platform-name">GitHub</div>
+          <div class="platform-handle" id="gh-handle">not linked</div>
+        </div>
+        <span class="not-linked-badge" id="gh-badge" style="display:none">—</span>
+      </button>
+
+      <button class="platform-btn" id="btn-leetcode" onclick="selectPlatform('leetcode')">
+        <div class="platform-icon lc"><i class="fas fa-code"></i></div>
+        <div class="platform-info">
+          <div class="platform-name">LeetCode</div>
+          <div class="platform-handle" id="lc-handle">not linked</div>
+        </div>
+        <span class="not-linked-badge" id="lc-badge" style="display:none">—</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainContent">
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-chart-line"></i></div>
+      <h3>Select a platform</h3>
+      <p>Choose Codeforces, GitHub, or LeetCode<br>to view your analytics</p>
+    </div>
+  </main>
+
 </div>
 
 <script>
-/* ================= AUTH CHECK ================= */
-const email = localStorage.getItem("email");
-if (!email) {
-    window.location.href = "index.html";
-}
+/* ========== CONFIG ========== */
+const API = 'http://localhost:5000';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-/* ================= NOT LINKED MESSAGE ================= */
-function showNotLinked(platform) {
-    const rightPanel = document.getElementById("rightPanel");
-    rightPanel.innerHTML = `
-        <div style="text-align:center;margin-top:120px">
-            <h2>Platform not linked</h2>
-            <p>Please add <b>${platform}</b> in your profile.</p>
-        </div>
-    `;
-}
+/* ========== AUTH ========== */
+const email = localStorage.getItem('email');
+if (!email) window.location.replace('form.html');
 
-/* ================= LOAD PROFILE ================= */
-async function loadProfile() {
-    const res = await fetch(`http://localhost:5000/getUser/${email}`);
-    const user = await res.json();
+let userData = null;
+let chartInstances = {};
 
-    document.getElementById("leftPanel").innerHTML = `
-        <div class="card">
-            <div class="profile">
-                <div class="avatar"><i class="fas fa-user"></i></div>
-                <h2>${user.name}</h2>
-                <p>${user.email}</p>
-            </div>
+/* ========== CHART DEFAULTS ========== */
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#21262d';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
 
-            <div class="divider"></div>
+/* ========== LOAD PROFILE ========== */
+async function init() {
+  try {
+    const res = await fetch(`${API}/getUser/${email}`);
+    if (!res.ok) throw new Error('Not found');
+    userData = await res.json();
 
-            <div class="platform"
-                onclick="${user.codeforces
-                    ? "showAnalytics('codeforces')"
-                    : "showNotLinked('Codeforces')"}">
-                <div class="icon codeforces"><i class="fas fa-trophy"></i></div>
-                Codeforces
-            </div>
+    document.getElementById('topbarName').textContent = userData.name;
+    document.getElementById('profileName').textContent = userData.name;
+    document.getElementById('profileEmail').textContent = userData.email;
+    document.getElementById('profileInitials').textContent = userData.name.charAt(0).toUpperCase();
 
-            <div class="platform"
-                onclick="${user.github
-                    ? "showAnalytics('github')"
-                    : "showNotLinked('GitHub')"}">
-                <div class="icon github"><i class="fab fa-github"></i></div>
-                GitHub
-            </div>
-
-            <div class="platform"
-                onclick="${user.leetcode
-                    ? "showAnalytics('leetcode')"
-                    : "showNotLinked('LeetCode')"}">
-                <div class="icon leetcode"><i class="fas fa-code"></i></div>
-                LeetCode
-            </div>
-
-            <button class="logout" onclick="logout()">Logout</button>
-        </div>
-    `;
-}
-
-/* ================= ANALYTICS (UNCHANGED) ================= */
-async function showAnalytics(platform) {
-    const rightPanel = document.getElementById("rightPanel");
-    rightPanel.innerHTML = "<p>Loading analytics...</p>";
-
-    /* -------- CODEFORCES -------- */
-    if (platform === "codeforces") {
-        const res = await fetch(
-            `http://localhost:5000/api/codeforces/submissions/user/${email}`
-        );
-
-        const submissions = await res.json();
-
-        const months = Array(12).fill(0);
-        submissions.forEach(s => {
-            if (s.verdict === "OK") {
-                const d = new Date(s.creationTimeSeconds * 1000);
-                months[d.getMonth()]++;
-            }
-        });
-
-        let rating = 800;
-        const ratingData = months.map(() => {
-            rating += Math.floor(Math.random() * 40);
-            return rating;
-        });
-
-        rightPanel.innerHTML = `
-            <h2>Codeforces Analytics</h2>
-            <div class="charts-grid">
-                <div class="chart-box"><canvas id="cfBar"></canvas></div>
-                <div class="chart-box"><canvas id="cfLine"></canvas></div>
-            </div>
-        `;
-
-        new Chart(document.getElementById("cfBar"), {
-            type: "bar",
-            data: {
-                labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-                datasets: [{
-                    label: "Problems Solved",
-                    data: months,
-                    backgroundColor: "#3b82f6"
-                }]
-            }
-        });
-
-        new Chart(document.getElementById("cfLine"), {
-            type: "line",
-            data: {
-                labels: ["Jan","Feb","Mar","Apr","May","Jun"],
-                datasets: [{
-                    label: "Rating",
-                    data: ratingData.slice(0,6),
-                    borderColor: "#10b981",
-                    tension: 0.3
-                }]
-            }
-        });
-        return;
+    // Update sidebar handles
+    let linked = 0;
+    if (userData.codeforces) {
+      document.getElementById('cf-handle').textContent = userData.codeforces;
+      linked++;
+    } else {
+      document.getElementById('cf-badge').style.display = 'block';
+      document.getElementById('btn-codeforces').style.opacity = '0.5';
     }
+    if (userData.github) {
+      const gh = userData.github.split('/').pop();
+      document.getElementById('gh-handle').textContent = gh;
+      linked++;
+    } else {
+      document.getElementById('gh-badge').style.display = 'block';
+      document.getElementById('btn-github').style.opacity = '0.5';
+    }
+    if (userData.leetcode) {
+      document.getElementById('lc-handle').textContent = userData.leetcode;
+      linked++;
+    } else {
+      document.getElementById('lc-badge').style.display = 'block';
+      document.getElementById('btn-leetcode').style.opacity = '0.5';
+    }
+    document.getElementById('linkedCount').textContent = `${linked}/3`;
 
-    /* -------- GITHUB -------- */
-    if (platform === "github") {
-        const res = await fetch(
-            `http://localhost:5000/api/github/commits/${email}`
-        );
+  } catch(e) {
+    localStorage.removeItem('email');
+    window.location.replace('form.html');
+  }
+}
 
-        if (!res.ok) {
-            rightPanel.innerHTML = "<p>Failed to load GitHub analytics</p>";
-            return;
+/* ========== PLATFORM SELECT ========== */
+function selectPlatform(platform) {
+  // Update active state
+  document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`btn-${platform}`).classList.add('active');
+
+  // Destroy old charts
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
+
+  if (platform === 'codeforces') showCodeforces();
+  else if (platform === 'github') showGitHub();
+  else if (platform === 'leetcode') showLeetCode();
+}
+
+/* ========== SHOW LOADING ========== */
+function setLoading(platformName) {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div class="loading-text">Fetching ${platformName} data</div>
+    </div>
+  `;
+}
+
+/* ========== NOT LINKED ========== */
+function setNotLinked(platformName) {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="not-linked-state fade-in">
+      <div class="icon-wrap"><i class="fas fa-unlink"></i></div>
+      <h3>${platformName} not linked</h3>
+      <p>Go back to sign up and add your ${platformName} username to see analytics here.</p>
+    </div>
+  `;
+}
+
+/* ========== CODEFORCES ========== */
+async function showCodeforces() {
+  if (!userData.codeforces) { setNotLinked('Codeforces'); return; }
+  setLoading('Codeforces');
+
+  try {
+    const res = await fetch(`${API}/api/codeforces/submissions/user/${email}`);
+    const submissions = await res.json();
+
+    if (!Array.isArray(submissions)) throw new Error();
+
+    // Process data
+    const months = Array(12).fill(0);
+    const verdict = { OK: 0, WRONG: 0, TLE: 0, OTHER: 0 };
+    const uniqueProblems = new Set();
+
+    submissions.forEach(s => {
+      const d = new Date(s.creationTimeSeconds * 1000);
+      if (s.verdict === 'OK') {
+        months[d.getMonth()]++;
+        uniqueProblems.add(`${s.problem.contestId}-${s.problem.index}`);
+        verdict.OK++;
+      } else if (s.verdict === 'WRONG_ANSWER') verdict.WRONG++;
+      else if (s.verdict === 'TIME_LIMIT_EXCEEDED') verdict.TLE++;
+      else verdict.OTHER++;
+    });
+
+    // Rating progression mock
+    let rating = 800;
+    const ratingData = MONTHS.map(() => {
+      rating += Math.floor(Math.random() * 60 - 10);
+      return Math.max(800, rating);
+    });
+
+    const total = verdict.OK + verdict.WRONG + verdict.TLE + verdict.OTHER;
+    const acRate = total ? ((verdict.OK / total) * 100).toFixed(1) : 0;
+
+    document.getElementById('mainContent').innerHTML = `
+      <div class="section-header fade-in">
+        <div class="section-icon cf"><i class="fas fa-trophy"></i></div>
+        <div>
+          <div class="section-title">Codeforces Analytics</div>
+          <div class="section-subtitle">${userData.codeforces} · ${submissions.length} total submissions</div>
+        </div>
+      </div>
+
+      <div class="stats-row fade-in fade-in-d1">
+        <div class="stat-card blue">
+          <div class="stat-card-label">Solved</div>
+          <div class="stat-card-value blue">${uniqueProblems.size}</div>
+          <div class="stat-card-sub">unique problems</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-label">AC Rate</div>
+          <div class="stat-card-value green">${acRate}%</div>
+          <div class="stat-card-sub">acceptance rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">This Year</div>
+          <div class="stat-card-value">${months.reduce((a,b) => a+b, 0)}</div>
+          <div class="stat-card-sub">AC submissions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Total</div>
+          <div class="stat-card-value">${submissions.length}</div>
+          <div class="stat-card-sub">all submissions</div>
+        </div>
+      </div>
+
+      <div class="charts-grid fade-in fade-in-d2">
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-blue"></span>Problems Solved / Month</div>
+          <div class="chart-canvas-wrap"><canvas id="cfBar"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-green"></span>Rating Progression</div>
+          <div class="chart-canvas-wrap"><canvas id="cfLine"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-orange"></span>Verdict Distribution</div>
+          <div class="chart-canvas-wrap"><canvas id="cfDoughnut"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-purple"></span>Activity Heatmap (Monthly)</div>
+          <div class="chart-canvas-wrap"><canvas id="cfRadar"></canvas></div>
+        </div>
+      </div>
+    `;
+
+    // Bar chart
+    chartInstances.bar = new Chart(document.getElementById('cfBar'), {
+      type: 'bar',
+      data: {
+        labels: MONTHS,
+        datasets: [{
+          label: 'AC Problems',
+          data: months,
+          backgroundColor: 'rgba(77,158,255,0.6)',
+          borderColor: '#4d9eff',
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(33,38,45,0.8)' }, beginAtZero: true },
+          x: { grid: { display: false } }
         }
+      }
+    });
 
-        const data = await res.json();
+    // Line chart
+    chartInstances.line = new Chart(document.getElementById('cfLine'), {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [{
+          label: 'Rating',
+          data: ratingData,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0,255,136,0.05)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#00ff88',
+          pointRadius: 3,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(33,38,45,0.8)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
 
-        const labels = Object.keys(data);
-        const values = Object.values(data);
+    // Doughnut
+    chartInstances.doughnut = new Chart(document.getElementById('cfDoughnut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Accepted', 'Wrong Answer', 'TLE', 'Other'],
+        datasets: [{
+          data: [verdict.OK, verdict.WRONG, verdict.TLE, verdict.OTHER],
+          backgroundColor: ['#00ff88','#ff4757','#ffb347','#8b949e'],
+          borderColor: '#0d1117',
+          borderWidth: 3,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+          }
+        },
+        cutout: '65%'
+      }
+    });
 
-        rightPanel.innerHTML = `
-            <h2>GitHub Analytics</h2>
-            <div class="chart-box">
-                <canvas id="ghChart"></canvas>
-            </div>
-        `;
+    // Radar
+    chartInstances.radar = new Chart(document.getElementById('cfRadar'), {
+      type: 'radar',
+      data: {
+        labels: MONTHS,
+        datasets: [{
+          label: 'AC Problems',
+          data: months,
+          borderColor: '#c084fc',
+          backgroundColor: 'rgba(192,132,252,0.1)',
+          borderWidth: 2,
+          pointBackgroundColor: '#c084fc',
+          pointRadius: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          r: {
+            grid: { color: 'rgba(33,38,45,0.8)' },
+            pointLabels: { font: { size: 10 } },
+            beginAtZero: true
+          }
+        }
+      }
+    });
 
-        new Chart(document.getElementById("ghChart"), {
-            type: "bar",
-            data: {
-                labels,
-                datasets: [{
-                    label: "Commits per Month",
-                    data: values,
-                    backgroundColor: "#1f2937"
-                }]
-            }
-        });
-        return;
-    }
-
-    /* -------- LEETCODE -------- */
-    if (platform === "leetcode") {
-        rightPanel.innerHTML = `
-            <h2>LeetCode Analytics</h2>
-            <p>Analytics coming soon</p>
-        `;
-    }
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="not-linked-state fade-in">
+        <div class="icon-wrap" style="background:rgba(255,179,71,0.08);border-color:rgba(255,179,71,0.2);color:var(--lc-color);">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>Failed to load data</h3>
+        <p>Could not fetch Codeforces submissions. Check that your handle is correct.</p>
+      </div>`;
+  }
 }
 
-/* ================= LOGOUT ================= */
+/* ========== GITHUB ========== */
+async function showGitHub() {
+  if (!userData.github) { setNotLinked('GitHub'); return; }
+  setLoading('GitHub');
+
+  try {
+    const res = await fetch(`${API}/api/github/commits/${email}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+    const labels = Object.keys(data).sort();
+    const values = labels.map(k => data[k]);
+    const totalCommits = values.reduce((a,b) => a+b, 0);
+    const avgCommits = labels.length ? (totalCommits / labels.length).toFixed(1) : 0;
+    const maxCommits = Math.max(...values, 0);
+
+    document.getElementById('mainContent').innerHTML = `
+      <div class="section-header fade-in">
+        <div class="section-icon gh"><i class="fab fa-github"></i></div>
+        <div>
+          <div class="section-title">GitHub Analytics</div>
+          <div class="section-subtitle">${userData.github.split('/').pop()} · commit history</div>
+        </div>
+      </div>
+
+      <div class="stats-row fade-in fade-in-d1">
+        <div class="stat-card green">
+          <div class="stat-card-label">Total Commits</div>
+          <div class="stat-card-value green">${totalCommits}</div>
+          <div class="stat-card-sub">across repos</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-card-label">Avg / Month</div>
+          <div class="stat-card-value blue">${avgCommits}</div>
+          <div class="stat-card-sub">commits per month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Peak Month</div>
+          <div class="stat-card-value">${maxCommits}</div>
+          <div class="stat-card-sub">max in a month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Active Months</div>
+          <div class="stat-card-value">${labels.length}</div>
+          <div class="stat-card-sub">months with commits</div>
+        </div>
+      </div>
+
+      <div class="charts-grid fade-in fade-in-d2">
+        <div class="chart-card full">
+          <div class="chart-card-title"><span class="dot dot-green"></span>Commits Over Time</div>
+          <div class="chart-canvas-wrap"><canvas id="ghLine"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-blue"></span>Monthly Commit Bars</div>
+          <div class="chart-canvas-wrap"><canvas id="ghBar"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title"><span class="dot dot-green"></span>Commit Intensity</div>
+          <div class="chart-canvas-wrap"><canvas id="ghPolar"></canvas></div>
+        </div>
+      </div>
+    `;
+
+    chartInstances.ghLine = new Chart(document.getElementById('ghLine'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Commits',
+          data: values,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0,255,136,0.06)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#00ff88',
+          pointRadius: 4,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(33,38,45,0.8)' }, beginAtZero: true },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    chartInstances.ghBar = new Chart(document.getElementById('ghBar'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Commits',
+          data: values,
+          backgroundColor: values.map(v =>
+            v === maxCommits ? 'rgba(0,255,136,0.8)' : 'rgba(0,255,136,0.25)'
+          ),
+          borderColor: '#00ff88',
+          borderWidth: 1,
+          borderRadius: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(33,38,45,0.8)' }, beginAtZero: true },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    chartInstances.ghPolar = new Chart(document.getElementById('ghPolar'), {
+      type: 'polarArea',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: labels.map((_, i) =>
+            `hsla(${150 + i * 15}, 80%, 55%, 0.5)`
+          ),
+          borderColor: 'rgba(33,38,45,0.8)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          r: { grid: { color: 'rgba(33,38,45,0.8)' }, beginAtZero: true }
+        }
+      }
+    });
+
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="not-linked-state fade-in">
+        <div class="icon-wrap" style="background:rgba(255,179,71,0.08);border-color:rgba(255,179,71,0.2);color:var(--lc-color);">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>Failed to load data</h3>
+        <p>GitHub API might be rate-limited. Try again in a moment.</p>
+      </div>`;
+  }
+}
+
+/* ========== LEETCODE ========== */
+function showLeetCode() {
+  if (!userData.leetcode) { setNotLinked('LeetCode'); return; }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="section-header fade-in">
+      <div class="section-icon lc"><i class="fas fa-code"></i></div>
+      <div>
+        <div class="section-title">LeetCode Analytics</div>
+        <div class="section-subtitle">${userData.leetcode}</div>
+      </div>
+    </div>
+    <div class="not-linked-state fade-in fade-in-d1">
+      <div class="icon-wrap" style="background:rgba(255,179,71,0.08);border-color:rgba(255,179,71,0.2);color:var(--lc-color);">
+        <i class="fas fa-code"></i>
+      </div>
+      <h3>Analytics Coming Soon</h3>
+      <p>LeetCode integration is in progress.<br>Check back soon for detailed problem stats!</p>
+    </div>
+  `;
+}
+
+/* ========== LOGOUT ========== */
 function logout() {
-    if (confirm("Are you sure you want to logout?")) {
-        localStorage.removeItem("email");
-        window.location.replace("form.html");
-    }
+  if (confirm('Sign out of devMetrics?')) {
+    localStorage.removeItem('email');
+    window.location.replace('form.html');
+  }
 }
 
-/* ================= INIT ================= */
-loadProfile();
+/* ========== INIT ========== */
+init();
 </script>
-
 </body>
 </html>
