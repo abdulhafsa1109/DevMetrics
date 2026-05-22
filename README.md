@@ -1,26 +1,35 @@
-# DevMetrics – Personal Coding Analytics Platform
+devMetrics — Personal Coding Analytics Platform
+devMetrics is a full-stack web app I built to solve a problem I personally had — constantly switching between Codeforces and GitHub just to check my own progress. Instead of juggling multiple tabs, devMetrics pulls everything into one clean dashboard with real data and interactive charts.
 
-DevMetrics is a full-stack web application that helps developers track, analyze, and visualize their coding activity across platforms like **Codeforces** and **GitHub**.  
-It collects real-time data from public APIs and presents meaningful insights through an interactive analytics dashboard.
+What it does
 
-## Features
-- Secure user authentication with personal dashboards
-- Codeforces and GitHub account integration
-- Real-time data fetching using REST APIs
-- Analytics for problems solved, rating trends, and commit activity
-- Interactive charts and responsive dashboard UI
+Connect your Codeforces and GitHub accounts
+See problems solved, submission verdicts, and rating trends from Codeforces
+View your commit history and activity patterns from GitHub
+All data is fetched live from public APIs — no manual input needed
+Each user gets their own personalized dashboard
 
-## Tech Stack
-**Frontend:** HTML, CSS, JavaScript, Chart.js  
-**Backend:** Node.js, Express.js  
-**Database:** SQLite  
 
-## APIs Used
-- Codeforces Public API  
-- GitHub REST API  
+Tech Stack
+LayerTechnologyFrontendHTML, CSS, JavaScript, Chart.jsBackendNode.js, Express.jsDatabaseSQLiteAPIsCodeforces Public API, GitHub REST API
 
-## Key Highlights
-- End-to-end full-stack application development
-- Integration of third-party APIs
-- Data visualization using interactive charts
-- Scalable backend architecture for future integrations
+Running it locally
+bash# Clone the repo
+git clone https://github.com/yourusername/devmetrics
+
+# Install dependencies
+cd server
+npm install
+
+# Start the server
+node index.js
+
+# Open the frontend
+# Just open client/form.html in your browser
+
+What I learned building this
+This was my first time integrating multiple third-party APIs into a single project. Handling async data fetching, dealing with GitHub's rate limits, and figuring out how to structure a full-stack app from scratch taught me more than any tutorial did.
+Planned improvements include password-based authentication, LeetCode integration, and a deployed live version.
+
+Screenshots
+(add screenshots here)
