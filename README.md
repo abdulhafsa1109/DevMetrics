@@ -3,7 +3,7 @@
 devMetrics is a full-stack web app I built to solve a problem I personally had — constantly switching between Codeforces and GitHub just to check my own progress. Instead of juggling multiple tabs, devMetrics pulls everything into one clean dashboard with real data and interactive charts.
 
 ---
-
+Demo:https://moonlit-unicorn-e605f8.netlify.app/
 ## What it does
 
 - Connect your **Codeforces** and **GitHub** accounts
