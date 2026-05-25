@@ -521,7 +521,7 @@ signInForm.addEventListener("submit", async (e) => {
   if (!email) { showMsg('⚠ Please enter your email', 'error'); return; }
 
   try {
-    const res = await fetch(`http://localhost:5000/getUser/${email}`);
+    const res = await fetch(`https://devmetrics-df75.onrender.com/getUser/${email}`);
     if (!res.ok) { showMsg('⚠ User not found — please sign up', 'error'); return; }
     const user = await res.json();
     localStorage.setItem("email", user.email);
